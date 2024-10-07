@@ -35,7 +35,7 @@ bool rotate_gol(pair<int, int> (&gtmp)[5], vector<vector<bool>>& vis, int& exitd
         int lrx = gtmp[i].first - 1;
         int lry = gtmp[i].second + lr;
 
-        if (lrx < 1 || lry < 1 || lrx > r || lry > c) {
+        if (lrx < 1 || lry < 1 || lry > c) {
             return false;
         }
 
@@ -92,6 +92,9 @@ bool move_gol(vector<vector<int>>& maps, vector<vector<bool>>& vis, int& sum,
         int ly = gtmp[3].second;
         if (lx < 1) break;
         bool lvis = vis[lx][ly];
+        //cout << "bx: " << bx << "by: "<<by << '\n';
+
+        //cout << "l: " << lvis<<"b: "<<bvis<<"r: "<< rvis << '\n';
 
         if (!lvis && !bvis && !rvis) {//아래로 이동할 수 있으면
             for (int i = 0; i < 5; i++) {
@@ -103,6 +106,8 @@ bool move_gol(vector<vector<int>>& maps, vector<vector<bool>>& vis, int& sum,
                 break;
             }
         }
+        //cout << "b: " << gtmp[1].first << '\n';
+
     }//while(1)-이동 끝
 
     if (gtmp[4].first > r) {//숲에 다 못들어갔다면
@@ -126,14 +131,17 @@ bool move_gol(vector<vector<int>>& maps, vector<vector<bool>>& vis, int& sum,
         }
     }
 
+    //cout << "vis등록" << '\n';
     for (int i = 0; i < 5; i++) {
         int x = gtmp[i].first;
         int y = gtmp[i].second;
 
+        //cout << "x: " << x << " y: " << y << '\n';
         vis[x][y] = true;
         maps[x][y] = lowr;//맨 밑 row값을 저장
     }
     sum += r + 1 - lowr;//1행이면 r행
+    //cout << r + 1 - lowr << '\n';
     return true;
 }
 
