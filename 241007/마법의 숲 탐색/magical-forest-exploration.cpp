@@ -21,7 +21,7 @@ bool rotate_gol(pair<int, int>(&gtmp)[5], vector<vector<bool>>& vis, int& exitdi
         int lrx = gtmp[i].first;
         int lry = gtmp[i].second + lr;
 
-        if (lry < 1 || lry > c || vis[lrx][lry]) {
+        if (lrx < 1 || lry < 1 || lry > c || vis[lrx][lry]) {
             return false;
         }
     }
