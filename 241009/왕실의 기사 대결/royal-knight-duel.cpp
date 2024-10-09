@@ -62,6 +62,7 @@ void kill_sol(int si) {
 
 void millin_move(int si, int d) {
 	vector<bool> millins(31);
+	vector<pair<int, int>> changed;
 	int tcnt = 0;
 
 	for (pair<int, int>& sxy : solxy[si]) {
@@ -70,7 +71,6 @@ void millin_move(int si, int d) {
 
 		int nx = x + dx[d];
 		int ny = y + dy[d];
-		swtable[nx][ny] = si;
 
 		if (swtable[nx][ny] > 0 && swtable[nx][ny] != si) {
 			millins[swtable[nx][ny]] = true;
@@ -78,12 +78,16 @@ void millin_move(int si, int d) {
 		if (ttable[nx][ny]) {
 			tcnt++;
 		}
+		swtable[nx][ny] = si;
+		changed.push_back(make_pair(nx, ny));
 	}
 	for (int i = 1; i <= n; i++) {
 		if (millins[i]) {
 			millin_move(si, d);
 		}
 	}
+
+	solxy[si] = changed;
 
 	sol[si].health -= tcnt;
 	answer += tcnt;
@@ -94,6 +98,7 @@ void millin_move(int si, int d) {
 
 void ordered_move(int si, int d) {
 	vector<bool> millins(31);
+	vector<pair<int, int>> changed;
 	int tcnt = 0;
 
 	for (pair<int, int>& sxy : solxy[si]) {
@@ -103,14 +108,12 @@ void ordered_move(int si, int d) {
 
 		int nx = x + dx[d];
 		int ny = y + dy[d];
-		swtable[nx][ny] = si;
 
 		if (swtable[nx][ny] > 0 && swtable[nx][ny] != si) {
 			millins[swtable[nx][ny]] = true;
 		}
-		if (ttable[nx][ny]) {
-			tcnt++;
-		}
+		swtable[nx][ny] = si;
+		changed.push_back(make_pair(nx, ny));
 	}
 	for (int i = 1; i <= n; i++) {
 		if (millins[i]) {
@@ -118,11 +121,7 @@ void ordered_move(int si, int d) {
 		}
 	}
 
-	sol[si].health -= tcnt;
-	answer += tcnt;
-	if (sol[si].health <= 0) {
-		kill_sol(si);
-	}
+	solxy[si] = changed;
  }
 
 
