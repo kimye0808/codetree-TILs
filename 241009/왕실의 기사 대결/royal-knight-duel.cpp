@@ -14,7 +14,7 @@ vector<pair<int, int>> solxy[31];
 vector<vector<int>> swtable(41, vector<int>(41));
 vector<vector<bool>> ttable(41, vector<bool>(41));
 vector<Sol> sol(31);
-int answer;
+vector<int> answer(31);//Q 번의 대결이 모두 끝난 후 생존한 기사들이 총 받은 대미지의 합
 
 int dx[] = { -1, 0, 1, 0 };
 int dy[] = { 0, 1, 0, -1 };
@@ -68,6 +68,7 @@ void millin_move(int si, int d) {
 	for (pair<int, int>& sxy : solxy[si]) {
 		int x = sxy.first;
 		int y = sxy.second;
+		swtable[x][y] = 0;
 
 		int nx = x + dx[d];
 		int ny = y + dy[d];
@@ -78,19 +79,22 @@ void millin_move(int si, int d) {
 		if (ttable[nx][ny]) {
 			tcnt++;
 		}
-		swtable[nx][ny] = si;
 		changed.push_back(make_pair(nx, ny));
 	}
 	for (int i = 1; i <= n; i++) {
 		if (millins[i]) {
-			millin_move(si, d);
+			millin_move(i, d);
 		}
+	}
+	
+	for (int i = 0; i < (int)changed.size(); i++) {
+		swtable[changed[i].first][changed[i].second] = si;
 	}
 
 	solxy[si] = changed;
 
 	sol[si].health -= tcnt;
-	answer += tcnt;
+	answer[si] += tcnt;
 	if (sol[si].health <= 0) {
 		kill_sol(si);
 	}
@@ -112,15 +116,16 @@ void ordered_move(int si, int d) {
 		if (swtable[nx][ny] > 0 && swtable[nx][ny] != si) {
 			millins[swtable[nx][ny]] = true;
 		}
-		swtable[nx][ny] = si;
 		changed.push_back(make_pair(nx, ny));
 	}
 	for (int i = 1; i <= n; i++) {
 		if (millins[i]) {
-			millin_move(si, d);
+			millin_move(i, d);
 		}
 	}
-
+	for (int i = 0; i < (int)changed.size(); i++) {
+		swtable[changed[i].first][changed[i].second] = si;
+	}
 	solxy[si] = changed;
  }
 
@@ -159,6 +164,13 @@ int main() {
 		}
 	}
 
+	//for (int j = 1; j <= l; j++) {
+	//	for (int k = 1; k <= l; k++) {
+	//		cout << swtable[j][k] << ' ';
+	//	}
+	//	cout << '\n';
+	//}
+
 	// 명령 진행
 	for (int order = 1; order <= q; order++) {
 		int i, d;
@@ -172,8 +184,21 @@ int main() {
 		if (!sol[i].isdead) {
 			// ordered_move
 			ordered_move(i, d);
+
+			//for (int j = 1; j <= l; j++) {
+			//	for (int k = 1; k <= l; k++) {
+			//		cout << swtable[j][k] << ' ';
+			//	}
+			//	cout << '\n';
+			//}
 		}
 	}
 
-	cout << answer;
+	int result = 0;
+	for (int i = 1; i <= n; i++) {
+		if (sol[i].isdead == false) {
+			result += answer[i];
+		}
+	}
+	cout << result;
 }
