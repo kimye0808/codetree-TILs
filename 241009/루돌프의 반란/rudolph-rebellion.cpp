@@ -58,7 +58,10 @@ void print_table() {
 * dir: 움직이는 dir 방향
 */
 void r_sangho(int id, int x, int y, int dir) {
-	if (!inrange(x, y)) return;
+	if (!inrange(x, y)) {
+		san[id].onboard = false;
+		return;
+	}
 	if (board[x][y] == 0) {
 		board[x][y] = id;
 		san[id].x = x;
@@ -87,7 +90,10 @@ void r_sangho(int id, int x, int y, int dir) {
 * dir: 움직이는 dir 방향
 */
 void s_sangho(int id, int x, int y, int dir) {
-	if (!inrange(x, y)) return;
+	if (!inrange(x, y)) {
+		san[id].onboard = false;
+		return;
+	}
 	if (board[x][y] == 0) {
 		board[x][y] = id;
 		san[id].x = x;
