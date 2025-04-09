@@ -103,6 +103,7 @@ class Main
 	static int globalWarMoveCnt;
 	static int globalStoneCnt;
 	static int globalWarHitCnt;
+	static int[][] parkDist; // 좌표마다 공원까지의 거리
 	
 	static int TOWNSIZE, WARCNT;
 	static int[][] map;
@@ -191,6 +192,7 @@ class Main
 	}
 	
 	static void simulate() throws IOException {
+		parkDist = precomputeDistToPark();
 		for(int turn=0; turn < TOWNSIZE*TOWNSIZE+5; turn++) {
 			globalStoneCnt=0;
 			globalWarHitCnt=0;
@@ -548,32 +550,49 @@ class Main
 		
 		return vis[parkr][parkc];
 	}
+
+/*
+시간초과 해결용도
+메두사 움직일때마다 bfs해서 거리 계산하면 4 * TOWNSIZE *TOWNSIZE가 매번 일어남
+미리 거리 계산하고 getMedusaPos에서 활
+*/
+static int[][] precomputeDistToPark() {
+    int[][] dist = new int[TOWNSIZE][TOWNSIZE];
+    for(int[] row : dist) Arrays.fill(row, -1);
+    Queue<int[]> q = new ArrayDeque<>();
+    q.offer(new int[]{parkr, parkc});
+    dist[parkr][parkc] = 0;
+    while(!q.isEmpty()) {
+        int[] now = q.poll();
+        int r = now[0], c = now[1];
+        for(int dir = 0; dir < 4; dir++) {
+            int nr = r + MMoveDR[dir];
+            int nc = c + MMoveDC[dir];
+            if(outOfBorder(nr, nc) || map[nr][nc] == 1 || dist[nr][nc] != -1) continue;
+            dist[nr][nc] = dist[r][c] + 1;
+            q.offer(new int[]{nr, nc});
+        }
+    }
+    return dist;
+}
 	
-	static int[] getMedusaPos(int r, int c) {
-		// System.out.println("getMedusaPos");
-		int aptDir = -1;
-		int aptDist = TOWNSIZE * TOWNSIZE + 5;
-		int aptR = r;
-		int aptC = c;
-		for(int dir=0; dir<4; dir++) {
-			int nr = r + MMoveDR[dir];
-			int nc = c + MMoveDC[dir];
-			
-			if(outOfBorder(nr, nc)) continue;
-			if(map[nr][nc] == 1) continue;
-			
-			int localDist = getMedusaDist(nr, nc);
-			if(aptDist > localDist) {
-				aptDist = localDist;
-				aptDir = dir;
-				aptR = nr;
-				aptC = nc;
-			}
-		}
-		
-		// System.out.println("aptD :"+aptDist+", "+aptDir);
-		return new int[] {aptR,aptC, aptDir};
-	}
+static int[] getMedusaPos(int r, int c) {
+    int aptDir = -1;
+    int aptDist = parkDist[r][c];
+    int aptR = r, aptC = c;
+    for(int dir = 0; dir < 4; dir++) {
+        int nr = r + MMoveDR[dir];
+        int nc = c + MMoveDC[dir];
+        if(outOfBorder(nr, nc) || map[nr][nc] == 1 || parkDist[nr][nc] == -1) continue;
+        if(aptDist > parkDist[nr][nc]) {
+            aptDist = parkDist[nr][nc];
+            aptDir = dir;
+            aptR = nr;
+            aptC = nc;
+        }
+    }
+    return new int[]{aptR, aptC, aptDir};
+}
 	
 	/*
 	1. 메두사의 이동 - moveMedusa
