@@ -57,6 +57,10 @@ etc. getWolfDir
  */
 class Main
 {
+	static BufferedReader br;
+	static BufferedWriter bw;
+	static StringTokenizer st;
+	
 	static int[] MMoveDR = {-1, 1, 0, 0}; // 상하좌우
 	static int[] MMoveDC = {0, 0, -1, 1};
 	// 상, 상우, 우, 하우, 하, 하좌, 좌, 좌상
@@ -107,45 +111,49 @@ class Main
 	static List<Warrior> warriors;
 	static Medusa medusa;
 	
-	static void init(Scanner sc) {
-		TOWNSIZE = sc.nextInt();
-		WARCNT = sc.nextInt();
-	
-		int mr=sc.nextInt();
-		int mc=sc.nextInt();
-		medusa = new Medusa(mr, mc);
-		
-		parkr = sc.nextInt();
-		parkc = sc.nextInt();
-		
-		warExists = new ArrayList[TOWNSIZE][TOWNSIZE];
-		globalDirBoard = new int[TOWNSIZE][TOWNSIZE];
-		globalWarMoveCnt=0;
-		globalStoneCnt=0;
-		map = new int[TOWNSIZE][TOWNSIZE];
-		warriors = new ArrayList<>();
-		
-		for(int r=0; r<TOWNSIZE; r++) {
-			for(int c=0; c<TOWNSIZE; c++) {
-				warExists[r][c] = new ArrayList<>();
-			}
-		}
+	static void init() throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine().trim());
+        TOWNSIZE = Integer.parseInt(st.nextToken());
+        WARCNT = Integer.parseInt(st.nextToken());
 
-		for(int man=0; man<WARCNT; man++) {
-			int r = sc.nextInt();
-			int c = sc.nextInt();
-			
-			warriors.add(new Warrior(r, c, man));
-		}
-		
+        st = new StringTokenizer(br.readLine().trim());
+        int mr = Integer.parseInt(st.nextToken());
+        int mc = Integer.parseInt(st.nextToken());
+        medusa = new Medusa(mr, mc);
 
-		for(int r=0; r<TOWNSIZE; r++) {
-			for(int c=0; c<TOWNSIZE; c++) {
-				map[r][c] = sc.nextInt();
-			}
-		}
-	}
-	
+        parkr = Integer.parseInt(st.nextToken());
+        parkc = Integer.parseInt(st.nextToken());
+
+        warExists = new ArrayList[TOWNSIZE][TOWNSIZE];
+        globalDirBoard = new int[TOWNSIZE][TOWNSIZE];
+        globalWarMoveCnt = 0;
+        globalStoneCnt = 0;
+        globalWarHitCnt = 0;
+        map = new int[TOWNSIZE][TOWNSIZE];
+        warriors = new ArrayList<>();
+
+        for(int r = 0; r < TOWNSIZE; r++) {
+            for(int c = 0; c < TOWNSIZE; c++) {
+                warExists[r][c] = new ArrayList<>();
+            }
+        }
+
+        st = new StringTokenizer(br.readLine().trim());
+        for(int man = 0; man < WARCNT; man++) {
+            int r = Integer.parseInt(st.nextToken());
+            int c = Integer.parseInt(st.nextToken());
+            warriors.add(new Warrior(r, c, man));
+        }
+
+        for(int r = 0; r < TOWNSIZE; r++) {
+            st = new StringTokenizer(br.readLine().trim());
+            for(int c = 0; c < TOWNSIZE; c++) {
+                map[r][c] = Integer.parseInt(st.nextToken());
+            }
+        }
+    }
+
 	static int calcDist(int fr, int fc, int tr, int tc) {
 		return Math.abs(fr-tr) + Math.abs(fc-tc);
 	}
@@ -153,18 +161,11 @@ class Main
 	public static void main(String args[]) throws Exception
 	{
 		// System.setIn(new FileInputStream("res/input.txt"));
-
-		Scanner sc = new Scanner(System.in);
-		// int T;
-		// T=sc.nextInt();
-
-		// for(int test_case = 1; test_case <= T; test_case++)
-		// {
-			init(sc);
+		br = new BufferedReader(new InputStreamReader(System.in));
+		bw = new BufferedWriter(new OutputStreamWriter(System.out));
+			init();
 
 			simulate();
-			
-		// }
 	}
 	
 	static void printMedusa() {
@@ -189,7 +190,7 @@ class Main
 		}
 	}
 	
-	static void simulate() {
+	static void simulate() throws IOException {
 		for(int turn=0; turn < TOWNSIZE*TOWNSIZE+5; turn++) {
 			globalStoneCnt=0;
 			globalWarHitCnt=0;
@@ -200,11 +201,11 @@ class Main
 			// printWarExists();
 			
 			if(!moveMedusa()) {
-				System.out.println(-1);
+				bw.write(-1+"\n");
 				break;
 			}
 			if(medusa.r == parkr && medusa.c == parkc) {
-				System.out.println(0);
+				bw.write(0+"\n");
 				break;
 			}
 			
@@ -218,9 +219,11 @@ class Main
 			
 			StringBuilder sb = new StringBuilder();
 			sb.append(globalWarMoveCnt).append(" ").append(globalStoneCnt)
-			.append(" ").append(globalWarHitCnt);
-			System.out.println(sb.toString());
+			.append(" ").append(globalWarHitCnt).append("\n");
+			bw.write(sb.toString());
 		}
+		bw.flush();
+		bw.close();
 	}
 	
 	static int[] WFirstDR = {-1, 1, 0, 0};
