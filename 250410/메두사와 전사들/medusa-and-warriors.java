@@ -103,8 +103,9 @@ class Main
 	static int globalWarMoveCnt;
 	static int globalStoneCnt;
 	static int globalWarHitCnt;
-	static int[][] parkDist; // 좌표마다 공원까지의 거리
-	
+	static List<int[]> medusaPath; // 메두사의 미리 계산된 경로
+    static int pathIdx; // 현재 경로 인덱스
+    
 	static int TOWNSIZE, WARCNT;
 	static int[][] map;
 	static int parkr, parkc;
@@ -192,7 +193,7 @@ class Main
 	}
 	
 	static void simulate() throws IOException {
-		parkDist = precomputeDistToPark();
+		medusaPath = precomputeMedusaPath(medusa.r,medusa.c);
 		for(int turn=0; turn < TOWNSIZE*TOWNSIZE+5; turn++) {
 			globalStoneCnt=0;
 			globalWarHitCnt=0;
@@ -333,65 +334,69 @@ class Main
 	2-4. dirBoard에 특정방향들을 저장한다
 	*/
 	static int[][] propagateStone(int OR, int OC, int[] dir, int Mdir, 
-			int[][] dirBoard, boolean isWarrior) {
-		
-			int[][] poses = new int[dir.length][2];
-			for(int idx=0; idx<dir.length; idx++) {
-				poses[idx] = new int[] {
-						OR + MSeeDR[dir[idx]], OC + MSeeDC[dir[idx]]
-				};
-			};
-			Queue<int[]> q = new ArrayDeque<>();
-			
-			// 맨 처음 세 칸 세팅
-			for(int idx=0; idx<poses.length; idx++) {
-				if(!outOfBorder(poses[idx][0], poses[idx][1])) {
-					if(isWarrior) {
-						dirBoard[poses[idx][0]][poses[idx][1]] = HIDDEN;
-					}else {
-						dirBoard[poses[idx][0]][poses[idx][1]] = dir[idx];
-					}
-					q.offer(new int[] {poses[idx][0], poses[idx][1], dir[idx], Mdir});
-				}
-			};
-			
-			while(!q.isEmpty()) {
-				int[] now = q.poll();
-				int nowr = now[0];
-				int nowc = now[1];
-				int nowdir = now[2];
-				int subdir = now[3];
-				
-				int nr = nowr + MSeeDR[nowdir];
-				int nc = nowc + MSeeDC[nowdir];
-				
-				if(!outOfBorder(nr, nc)) {
-					if(isWarrior) {
-						dirBoard[nr][nc] = HIDDEN;
-					}else {
-						dirBoard[nr][nc] = nowdir;
-					}
-					q.offer(new int[] {nr, nc, nowdir, subdir});
-				}
-				
-				if(nowdir != Mdir) {
-					nr = nowr + MSeeDR[subdir];
-					nc = nowc + MSeeDC[subdir];
-					
-					if(!outOfBorder(nr, nc)) {
-						if(isWarrior) {
-							dirBoard[nr][nc] = HIDDEN;
-						}else {
-							dirBoard[nr][nc] = nowdir;
-						}
-						q.offer(new int[] {nr,nc, nowdir, subdir});
-					}
-				}
-			}
-			
-			return dirBoard;
+	        int[][] dirBoard, boolean isWarrior) {
+	    
+	    int[][] poses = new int[dir.length][2];
+	    for(int idx = 0; idx < dir.length; idx++) {
+	        poses[idx] = new int[] {
+	                OR + MSeeDR[dir[idx]], OC + MSeeDC[dir[idx]]
+	        };
+	    }
+	    Queue<int[]> q = new ArrayDeque<>();
+	    boolean[][] visited = new boolean[TOWNSIZE][TOWNSIZE]; // 방문 체크 배열 추가
+	    
+	    // 맨 처음 세 칸 세팅
+	    for(int idx = 0; idx < poses.length; idx++) {
+	        int r = poses[idx][0];
+	        int c = poses[idx][1];
+	        if(!outOfBorder(r, c) && !visited[r][c]) {
+	            if(isWarrior) {
+	                dirBoard[r][c] = HIDDEN;
+	            } else {
+	                dirBoard[r][c] = dir[idx];
+	            }
+	            visited[r][c] = true;
+	            q.offer(new int[] {r, c, dir[idx]});
+	        }
+	    }
+	    
+	    while(!q.isEmpty()) {
+	        int[] now = q.poll();
+	        int nowr = now[0];
+	        int nowc = now[1];
+	        int nowdir = now[2];
+	        
+	        // nowdir 방향으로 전파
+	        int nr = nowr + MSeeDR[nowdir];
+	        int nc = nowc + MSeeDC[nowdir];
+	        if(!outOfBorder(nr, nc) && !visited[nr][nc]) {
+	            if(isWarrior) {
+	                dirBoard[nr][nc] = HIDDEN;
+	            } else {
+	                dirBoard[nr][nc] = nowdir;
+	            }
+	            visited[nr][nc] = true;
+	            q.offer(new int[] {nr, nc, nowdir});
+	        }
+	        
+	        // Mdir 방향으로 전파 (조건 강화)
+	        if(nowdir != Mdir) {
+	            nr = nowr + MSeeDR[Mdir];
+	            nc = nowc + MSeeDC[Mdir];
+	            if(!outOfBorder(nr, nc) && !visited[nr][nc]) {
+	                if(isWarrior) {
+	                    dirBoard[nr][nc] = HIDDEN;
+	                } else {
+	                    dirBoard[nr][nc] = nowdir; // 주 방향이 아닌 nowdir 유지
+	                }
+	                visited[nr][nc] = true;
+	                q.offer(new int[] {nr, nc, nowdir});
+	            }
+	        }
+	    }
+	    
+	    return dirBoard;
 	}
-	
 	static void printBoard(String name, int[][] board) {
 		System.out.println(name+":");
 		for(int r=0; r<TOWNSIZE; r++) {
@@ -552,76 +557,95 @@ class Main
 //		return vis[parkr][parkc];
 //	}
 
-/*
-시간초과 해결용도
-메두사 움직일때마다 bfs해서 거리 계산하면 4 * TOWNSIZE *TOWNSIZE가 매번 일어남
-미리 거리 계산하고 getMedusaPos에서 활
-*/
-static int[][] precomputeDistToPark() {
-    int[][] dist = new int[TOWNSIZE][TOWNSIZE];
-    for(int[] row : dist) Arrays.fill(row, -1);
-    Queue<int[]> q = new ArrayDeque<>();
-    q.offer(new int[]{parkr, parkc});
-    dist[parkr][parkc] = 0;
-    // 메두사 입장에서 상하좌우 므로 공원 입장에서는 하상우좌
-    int[] dirs = new int[] {1,0,3,2};
-    while(!q.isEmpty()) {
-        int[] now = q.poll();
-        int r = now[0], c = now[1];
-        for(int dir = 0; dir < 4; dir++) {
-            int nr = r + MMoveDR[dirs[dir]];
-            int nc = c + MMoveDC[dirs[dir]];
-            if(outOfBorder(nr, nc) || map[nr][nc] == 1 || dist[nr][nc] != -1) continue;
-            dist[nr][nc] = dist[r][c] + 1;
-            q.offer(new int[]{nr, nc});
-        }
-    }
-    return dist;
-}
+///*
+//시간초과 해결용도
+//메두사 움직일때마다 bfs해서 거리 계산하면 4 * TOWNSIZE *TOWNSIZE가 매번 일어남
+//미리 거리 계산하고 getMedusaPos에서 활
+//*/
+//static int[][] precomputeDistToPark() {
+//    int[][] dist = new int[TOWNSIZE][TOWNSIZE];
+//    for(int[] row : dist) Arrays.fill(row, -1);
+//    Queue<int[]> q = new ArrayDeque<>();
+//    q.offer(new int[]{parkr, parkc});
+//    dist[parkr][parkc] = 0;
+//    // 메두사 입장에서 상하좌우 므로 공원 입장에서는 하상우좌
+//    int[] dirs = new int[] {1,0,3,2};
+//    while(!q.isEmpty()) {
+//        int[] now = q.poll();
+//        int r = now[0], c = now[1];
+//        for(int dir = 0; dir < 4; dir++) {
+//            int nr = r + MMoveDR[dirs[dir]];
+//            int nc = c + MMoveDC[dirs[dir]];
+//            if(outOfBorder(nr, nc) || map[nr][nc] == 1 || dist[nr][nc] != -1) continue;
+//            dist[nr][nc] = dist[r][c] + 1;
+//            q.offer(new int[]{nr, nc});
+//        }
+//    }
+//    return dist;
+//}
 	
-static int[] getMedusaPos(int r, int c) {
-    int aptDir = -1;
-    int aptDist = parkDist[r][c];
-    int aptR = r, aptC = c;
-    for(int dir = 0; dir < 4; dir++) {
-        int nr = r + MMoveDR[dir];
-        int nc = c + MMoveDC[dir];
-        if(outOfBorder(nr, nc) || map[nr][nc] == 1 || parkDist[nr][nc] == -1) continue;
-        if(aptDist > parkDist[nr][nc]) {
-            aptDist = parkDist[nr][nc];
-            aptDir = dir;
-            aptR = nr;
-            aptC = nc;
+	// 메두사의 경로를 미리 계산
+    static List<int[]> precomputeMedusaPath(int sr, int sc) {
+        int[][] dist = new int[TOWNSIZE][TOWNSIZE];
+        int[][][] prev = new int[TOWNSIZE][TOWNSIZE][2]; // 이전 좌표 저장
+        for (int[] row : dist) Arrays.fill(row, -1);
+
+        Queue<int[]> q = new ArrayDeque<>();
+        q.offer(new int[] {sr, sc});
+        dist[sr][sc] = 0;
+
+        while (!q.isEmpty()) {
+            int[] now = q.poll();
+            int r = now[0], c = now[1];
+            for (int dir = 0; dir < 4; dir++) {
+                int nr = r + MMoveDR[dir];
+                int nc = c + MMoveDC[dir];
+                if (outOfBorder(nr, nc) || map[nr][nc] == 1 || dist[nr][nc] != -1) continue;
+                dist[nr][nc] = dist[r][c] + 1;
+                prev[nr][nc] = new int[] {r, c};
+                q.offer(new int[] {nr, nc});
+            }
         }
+
+        // 경로가 없는 경우 빈 리스트 반환
+        if (dist[parkr][parkc] == -1) return new ArrayList<>();
+
+        // 경로 재구성
+        List<int[]> path = new ArrayList<>();
+        int r = parkr, c = parkc;
+        while (r != sr || c != sc) {
+            path.add(0, new int[] {r, c});
+            int[] p = prev[r][c];
+            r = p[0];
+            c = p[1];
+        }
+        path.add(0, new int[] {sr, sc});
+        return path;
     }
-    return new int[]{aptR, aptC, aptDir};
-}
-	
+
 	/*
 	1. 메두사의 이동 - moveMedusa
 	1-1. 1로는 이동 불가, 공원까지 최단 거리로 향하는 방향 구하고, 해당 칸으로 이동
+	// 했었는데 메모리 초과 시간 초과 나서 그냥 먼저 경로를 아예 정해버리고 거기로 가는 방식
 	1-1-1. 방향이 없으면, 못가므로 종료
 	1-2. 이동시 warExists 해당 좌표에 존재하는 전사 idx를 가져와서  싹 다 사망 처리한다
 	1-2-1. 해당 좌표의 warExists를 비운다
 	*/
-	static boolean moveMedusa() {
-		int sr = medusa.r;
-		int sc = medusa.c;
-		
-		int[] nextPos = getMedusaPos(sr, sc);
-		if(nextPos[2] == -1) {
-			return false;
-		}
-		
-		medusa.r = nextPos[0];
-		medusa.c = nextPos[1];
-		
-		if (warExists[medusa.r][medusa.c].size() > 0) {
-	        for (int widx : warExists[medusa.r][medusa.c]) {
-	            warriors.get(widx).isDead = true;
-	        }
-	        warExists[medusa.r][medusa.c].clear();
-	    }
-		return true;
-	}
+    // 미리 계산된 경로를 따라 메두사 이동
+    static boolean moveMedusa() {
+        if (pathIdx >= medusaPath.size() - 1) return false; // 경로 끝에 도달
+        pathIdx++;
+        medusa.r = medusaPath.get(pathIdx)[0];
+        medusa.c = medusaPath.get(pathIdx)[1];
+
+        if (warExists[medusa.r][medusa.c].size() > 0) {
+            for (int widx : warExists[medusa.r][medusa.c]) {
+                warriors.get(widx).isDead = true;
+            }
+            warExists[medusa.r][medusa.c].clear();
+        }
+        return true;
+    }
+	
+
 }
