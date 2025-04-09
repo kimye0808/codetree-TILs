@@ -562,12 +562,14 @@ static int[][] precomputeDistToPark() {
     Queue<int[]> q = new ArrayDeque<>();
     q.offer(new int[]{parkr, parkc});
     dist[parkr][parkc] = 0;
+    // 메두사 입장에서 상하좌우 므로 공원 입장에서는 하상우좌
+    int[] dirs = new int[] {1,0,3,2};
     while(!q.isEmpty()) {
         int[] now = q.poll();
         int r = now[0], c = now[1];
         for(int dir = 0; dir < 4; dir++) {
-            int nr = r + MMoveDR[dir];
-            int nc = c + MMoveDC[dir];
+            int nr = r + MMoveDR[dirs[dir]];
+            int nc = c + MMoveDC[dirs[dir]];
             if(outOfBorder(nr, nc) || map[nr][nc] == 1 || dist[nr][nc] != -1) continue;
             dist[nr][nc] = dist[r][c] + 1;
             q.offer(new int[]{nr, nc});
