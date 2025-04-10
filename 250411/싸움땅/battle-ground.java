@@ -43,7 +43,7 @@ import java.util.*;
  * 3. 이동 칸 에 플레이어가 있다면 fight
  * 4. 없으면 좌표 갱신, playerBoard 갱신
  */
-public class 싸움땅 {
+public class Main {
 	static BufferedReader br;
 	static BufferedWriter bw;
 	static StringTokenizer st;
