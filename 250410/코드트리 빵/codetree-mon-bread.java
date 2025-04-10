@@ -151,7 +151,8 @@ class Main
 	
 	static int doSimulate() {
 		int answer=0;
-		for(int time=1; time <= 31; time++) {
+		int time = 1;
+		while(true) {
 			// 1, 2
 			moveMans();
 			
@@ -164,6 +165,7 @@ class Main
 				answer = time;
 				break;
 			}
+			time++;
 		}
 		return answer;
 	}
