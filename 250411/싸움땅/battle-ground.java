@@ -5,6 +5,7 @@ import java.util.*;
  * 설계 : 38분
  * 구현 완료 : 1시간 31분
  * 1차 디버깅 : 2시간 25분, 보드판 갱신 순서 논리 오류
+ * 2차 디버깅 : 2시간 42분, 보드판 갱신 순서 논리 오류
  */
 /*
  * n 격자크기, m 플레이어 수, k 라운드 수
@@ -42,18 +43,19 @@ import java.util.*;
  * 3. 이동 칸 에 플레이어가 있다면 fight
  * 4. 없으면 좌표 갱신, playerBoard 갱신
  */
-public class Main {
+public class 싸움땅 {
 	static BufferedReader br;
 	static BufferedWriter bw;
 	static StringTokenizer st;
 	
 	public static void main(String[] args) throws Exception{
-		//System.setIn(new FileInputStream("res/input.txt"));
+		// System.setIn(new FileInputStream("res/input.txt"));
 		
 		br = new BufferedReader(new InputStreamReader(System.in));
 		bw = new BufferedWriter(new OutputStreamWriter(System.out));
 		
 
+		
 			StringBuilder sb = new StringBuilder();
 			
 			init();
@@ -191,6 +193,7 @@ public class Main {
 			if(playerBoard[nr][nc] > 0) {
 				fight(pidx, playerBoard[nr][nc], nr, nc);
 			}else {
+				//System.out.println(pidx);
 				if(gunBoard[nr][nc].size() > 0) {
 					if(p.gun != 0) {
 						gunBoard[nr][nc].add(p.gun);
@@ -253,22 +256,27 @@ public class Main {
 		int targetC = c;
 		int lr = players[loser].r;
 		int lc = players[loser].c;
+		int wr = players[winner].r;
+		int wc = players[winner].c;
 		
 		if(players[loser].gun != 0) {
-			gunBoard[lr][lc].add(players[loser].gun);
+			gunBoard[targetR][targetC].add(players[loser].gun);
 			players[loser].gun = 0;
 		}
 		
 		int nr = targetR;
 		int nc = targetC;
 		int ndir = players[loser].dir;
+		boolean found = false;
 		for(int rotCnt=0; rotCnt < 4; rotCnt++) {
 			ndir = (players[loser].dir+rotCnt)%4;
 			
 			nr = targetR + DR[ndir];
 			nc = targetC + DC[ndir];
 			
-			if(outOfBorder(nr,nc) || (playerBoard[nr][nc] > 0 && playerBoard[nr][nc] != winner)) continue;
+			if(outOfBorder(nr,nc) || (playerBoard[nr][nc] > 0 
+					&& playerBoard[nr][nc] != winner
+					&& playerBoard[nr][nc] != loser)) continue;
 			
 			if(gunBoard[nr][nc].size() > 0) {
 				if(players[loser].gun != 0) {
@@ -277,11 +285,10 @@ public class Main {
 				}
 				players[loser].gun = gunBoard[nr][nc].poll();
 			}
+			found = true;
 			break;
 		}
-		
-		int wr = players[winner].r;
-		int wc = players[winner].c;
+
 		if(players[winner].gun != 0) {
 			gunBoard[targetR][targetC].add(players[winner].gun);
 			players[winner].gun = 0;
