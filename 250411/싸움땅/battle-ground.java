@@ -48,19 +48,13 @@ public class Main {
 	static StringTokenizer st;
 	
 	public static void main(String[] args) throws Exception{
-		// System.setIn(new FileInputStream("res/input.txt"));
+		//System.setIn(new FileInputStream("res/input.txt"));
 		
 		br = new BufferedReader(new InputStreamReader(System.in));
 		bw = new BufferedWriter(new OutputStreamWriter(System.out));
 		
 
-		
-		// int T = Integer.parseInt(br.readLine().trim());
-		
-		// for(int test_case = 1; test_case <= T; test_case++)
-		// {
 			StringBuilder sb = new StringBuilder();
-		// 	sb.append("#").append(test_case).append(" ");
 			
 			init();
 			
@@ -69,9 +63,7 @@ public class Main {
 			for(int idx=1; idx<=M; idx++) {
 				sb.append(points[idx]).append(" ");
 			}
-			// sb.append("\n");
 			bw.write(sb.toString());
-		// }
 		bw.flush();
 		bw.close();
 	}
@@ -159,13 +151,10 @@ public class Main {
 			int r=players[pid].r;
 			int c=players[pid].c;
 			
-		//	playerBoard[r][c] = pid;
+			playerBoard[r][c] = pid;
 		}
-		// printBoard();
 		for(int turn=1; turn<=K; turn++) {
-			//System.out.println(turn+"턴");
 			movePlayers();
-			//printBoard();
 		}
 	}
 	
@@ -199,13 +188,9 @@ public class Main {
 				nc = c + DC[ndir];
 				players[pidx].dir = ndir;
 			}
-			// System.out.println(pidx+"처리중");
-			// printBoard();
-			// System.out.println(playerBoard[nr][nc]);
 			if(playerBoard[nr][nc] > 0) {
 				fight(pidx, playerBoard[nr][nc], nr, nc);
 			}else {
-				//System.out.println(pidx);
 				if(gunBoard[nr][nc].size() > 0) {
 					if(p.gun != 0) {
 						gunBoard[nr][nc].add(p.gun);
@@ -218,9 +203,6 @@ public class Main {
 				playerBoard[r][c] = 0;
 				playerBoard[nr][nc] = pidx;
 			}
-			// System.out.println(pidx+"처리후");
-			// System.out.println(r+"|"+c);
-			// printBoard();
 		}
 	}
 	
@@ -315,10 +297,6 @@ public class Main {
 		players[winner].r=targetR;
 		players[winner].c=targetC;
 		
-		// System.out.println("w: "+winner +" l: "+loser);
-		// System.out.println("lr lc : "+lr+", "+lc);
-		// System.out.println("lr lc : "+nr+", "+nc);
-
 		playerBoard[lr][lc] = 0;
 		playerBoard[wr][wc] = 0;
 		playerBoard[nr][nc] = loser;
