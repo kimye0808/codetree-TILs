@@ -278,7 +278,7 @@ public class Main {
 			int nextSanIdx = board[nowR][nowC]; // 밀리는 산타
 			
 			int nextR = nowR + RDR[targetDir];
-			int nextC = nowC + RDR[targetDir];
+			int nextC = nowC + RDC[targetDir];
 			
 			sans[nextSanIdx].r = nextR;
 			sans[nextSanIdx].c = nextC;
