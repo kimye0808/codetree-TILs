@@ -2,10 +2,9 @@ import java.io.*;
 import java.util.*;
 
 /*
- * 초기 설계 + 구현 : 1시간 58분
- * 1차 디버깅 완료 : 2시간 30분
  * 거리 3 이하만 이동 가능 조건 구현을 빼먹어서 오래 걸림
  * 조건 빼먹었지는 않았는지 체크하자
+ * 벽 충돌시 반대 방향을 객체 상태에 갱신 안해줘서 이것도 오래걸림
  */
 /*
  * N 보드크기
@@ -296,6 +295,7 @@ class Main {
 
 			runners[ridx].x = nx;
 			runners[ridx].y = ny;
+			runners[ridx].dir = dir;
 
 			// 맵 갱신
 			addRunner(nx, ny, ridx);
